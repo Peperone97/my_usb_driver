@@ -16,7 +16,6 @@ MODULE_DEVICE_TABLE( usb, my_driver_table );
 
 static int my_driver_probe( struct usb_interface *interface, const struct usb_device_id *id ){
 	printk(KERN_ALERT "Device connected\n");
-	pr_info("Prv\n");
 	return 0;
 }
 
