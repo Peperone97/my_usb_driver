@@ -1,15 +1,7 @@
-CC=gcc
-SOURCES=main.o
-LIBS=-lusb-1.0
-RES=usb
+obj-m += my_usb.o
+KDIR = /lib/modules/`uname -r`/build
 
-$(RES): $(SOURCES)
-	$(CC) $(SOURCES) $(LIBS) -o $(RES)
-
-main.o:	main.c
-	$(CC) main.c -c
-	
+all:
+	make -C $(KDIR) M=$(PWD) modules
 clean:
-	rm *.o
-clean_all:
-	rm *.o $(RES)
+	make -C $(KDIR) M=$(PWD) clean
