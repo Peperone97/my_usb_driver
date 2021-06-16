@@ -10,31 +10,38 @@ MODULE_LICENSE("Dual BSD/GPL");
 //#define VENDOR_ID	0x045e
 //#define KEYBOARD_ID	0x07b9
 
-int called = 0;
+struct urb *my_usb_urb = NULL;
 
 static int my_driver_probe( struct usb_interface *interface, const struct usb_device_id *id ){
 	struct usb_host_interface *iface;
 	int i;
 
-	called++;
-	//printk(KERN_DEBUG "Device connected\n");
+	printk(KERN_DEBUG "Vendor: 0x%x\tProduct: 0x%x\n", id->idVendor, id->idProduct);
 
 	iface = interface->cur_altsetting;
 	for( i = 0; i < iface->desc.bNumEndpoints; i++ ){
-		printk(KERN_DEBUG "Endpoint adress: 0x%x\n", iface->endpoint[i].desc.bEndpointAddress);
+		printk(KERN_DEBUG "Endpoint adress: 0x%x\tMax pkg size: %d\n", iface->endpoint[i].desc.bEndpointAddress, iface->endpoint[i].desc.wMaxPacketSize);
+	}
+
+	my_usb_urb = usb_alloc_urb( 0, GFP_KERNEL );
+	if( my_usb_urb == NULL ){
+		printk(KERN_ALERT "URB error\n" );
 	}
 
 	return 0;
 }
 
 static void my_driver_disconnect( struct usb_interface *interface ){
+	usb_free_urb( my_usb_urb );
+	my_usb_urb = NULL;
 	printk(KERN_DEBUG "Device disconnected\n");
 }
 
 static struct usb_device_id my_driver_table [] ={
-	{ USB_DEVICE( USB_VENDOR_ID, USB_PRODUCT_ID ) },
+	{ USB_DEVICE( USB_VENDOR_ID, USB_PRODUCT_ID ) }, // my keyboard
 	{ USB_DEVICE( 0x03f0, 0x1c41 ) }, // my hp mouse
-	{ USB_DEVICE( 0x1a86, 0x7529 ) },
+	{ USB_DEVICE( 0x1a86, 0x7529 ) }, //
+	{ USB_DEVICE( 0X22b8, 0x2e82 ) }, // my phone
 	{ } // terminating entry
 };
 MODULE_DEVICE_TABLE( usb, my_driver_table );
@@ -56,8 +63,11 @@ static int __init my_init( void ){
 }
 
 static void __exit my_exit( void ){
+	if( my_usb_urb != NULL ){
+		usb_free_urb( my_usb_urb );
+	}
 	usb_deregister( &my_driver );
-	printk(KERN_DEBUG "My driver exit: %d\n", called);
+	printk(KERN_DEBUG "My driver exit\n");
 }
 
 module_init( my_init );
